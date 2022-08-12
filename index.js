@@ -1,5 +1,8 @@
 const fs = require('fs/promises');
 const inquirer =require('inquirer');
+const Manager = require('./lib/Manager');
+const Engineer = require('./lib/Engineer');
+const Intern = require('./lib/Intern');
 
 const templateHelper = require('./src/templateHelper');
 
@@ -22,12 +25,12 @@ const questions = [
     {
         type: "input",
         message: "What is your ID number?",
-        name: "idNumber",
+        name: "id",
     }, 
     {
         type: "input",
         message: "What is your email address?",
-        name: "emailAddress",
+        name: "email",
     }, 
     {
         type: "input",
@@ -38,13 +41,13 @@ const questions = [
     {
         type: "input",
         message: "What is your GitHub username?",
-        name: "gitUsername",
+        name: "gitHub",
         when: (answers) => answers.role === 'Engineer'
     }, 
     {
         type: "input",
         message: "What is the name of your School?",
-        name: "schoolName",
+        name: "school",
         when: (answers) => answers.role === 'Intern'
     }, 
     {
@@ -54,11 +57,23 @@ const questions = [
       },
 ]
 
+
+const createEmployee = (employee) => {
+    if (employee.role === "Manager")
+        return new Manager(employee.id, employee.name, employee.email, employee.officeNumber);
+
+    if (employee.role === "Engineer")
+        return new Engineer(employee.id, employee.name, employee.email, employee.gitHub);
+
+    if (employee.role === "Intern")
+        return new Intern(employee.id, employee.name, employee.email, employee.school);
+};
+
 let employees = [];
 
 const getAnswers = () => {
     return inquirer.prompt (questions).then((answers)=> {
-        employees.push(answers);
+        employees.push(createEmployee(answers));
         if (answers.is_finished === false) {
             return employees;
         }
@@ -68,14 +83,27 @@ const getAnswers = () => {
     }); 
 }
 
+function writeToFile(fileName, data) {
+    fs.writeFile(fileName, data, err => {
+        if (err) {
+            return console.log(err);
+        }
+        console.log("Your index.html file has been generated");
+    });
+}
+
 function init() {
 
     getAnswers()
-    .then((employees) => templateHelper(employees))
+    .then((employees) => { 
+        const html = templateHelper(employees)
+        writeToFile("dist/index.html", html);
+    })
+
     .catch((error) => {});
+
    
 }
 
 init();
 
-// {role,name,idNumber,emailAddress,officeNumber,gitUsername,schoolName,is_finished}
