@@ -1,4 +1,4 @@
-const fs = require('fs/promises');
+const fs = require('fs');
 const inquirer =require('inquirer');
 const Manager = require('./lib/Manager');
 const Engineer = require('./lib/Engineer');
@@ -83,12 +83,20 @@ const getAnswers = () => {
     }); 
 }
 
-function writeToFile(fileName, data) {
-    fs.writeFile(fileName, data, err => {
-        if (err) {
-            return console.log(err);
-        }
-        console.log("Your index.html file has been generated");
+function writeToFile(data) {
+
+    const folder = "./dist";
+    const fileName = "index.html";
+
+    if(fs.existsSync(folder) === false)
+        fs.mkdirSync(folder, {
+            recursive: true
+        })
+
+    fs.writeFile(`${folder}/${fileName}`, data, err => {
+        if (err) return console.log(err);
+
+        console.log(`Your ${folder}/${fileName} file has been generated`);
     });
 }
 
@@ -97,12 +105,10 @@ function init() {
     getAnswers()
     .then((employees) => { 
         const html = templateHelper(employees)
-        writeToFile("dist/index.html", html);
+        writeToFile(html);
     })
-
     .catch((error) => {});
 
-   
 }
 
 init();
